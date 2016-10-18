@@ -1,24 +1,3 @@
-// Views
-function initMap() {
-
-  // Constructor creates a new map - only center and zoom are required.
-
-  map = new google.maps.Map(document.getElementById('map'), {
-
-    center: {lat: mapLat, lng: mapLng},
-
-    zoom: mapZoom,
-
-    styles: mapStyles,
-
-    mapTypeControl: false
-
-  });
-
-
-}
-
-
 // Models
 function hotPlaces(data) {
 //Declare how we will use Foursqare data for each venues in list
@@ -29,16 +8,12 @@ function hotPlaces(data) {
   self.lng = ko.observable(data.location.lng);
 
 
-//Declare to how we throw Forsquare data to Google Map marker API
+//Declare to how we throw Foursquare data to Google Map marker API
   self.marker = new google.maps.Marker({
     position: new google.maps.LatLng(self.lat(), self.lng()),
     map: map,
     title: self.name()
   });
-
-
-
-
 
 
 //https://developers.google.com/maps/documentation/javascript/examples/infowindow-simple
@@ -51,6 +26,9 @@ function hotPlaces(data) {
   self.infowindow = new google.maps.InfoWindow({
     content: self.contentString()
   })
+  
+//Show marker on the map 
+  self.marker.setMap(map);
 
 //Show info window when marker is clicked 
   self.marker.addListener('click', function() {
@@ -62,9 +40,8 @@ function hotPlaces(data) {
     }, 1000);  
   })
 
-  self.marker.setMap(map);
 
-  //This is for when user clicked list names. This is saying, treat is as if user clicked marker.
+  //This is for when user clicked list names. This is saying, treat it as if user clicked marker.
   self.animateClick = function(e) {
     google.maps.event.trigger(self.marker, 'click');
   };
@@ -75,7 +52,7 @@ function hotPlaces(data) {
 
 
 
-// Declare map location variable and set Tokyo as initial data
+// Declare map location variable for each city with JSON
 
 var centerLocations = {
 
@@ -238,38 +215,13 @@ var mapLat = centerLocations.tokyo.lat;
 var mapLng = centerLocations.tokyo.lng; 
 mapZoom = centerLocations.tokyo.zoom;
 
-// Ignore this for now. Planning to move into Knockout later
+// Function to move city to new place, but it won't do anything here. This will be used inside viewModel to do things.
 function moveCity() {
   var newLocation = new google.maps.LatLng(mapLat, mapLng)
   map.setCenter(newLocation);
   map.setZoom(mapZoom);
 
 };
-// Ignore this for now. Planning to move into Knockout later
-// function to change map and list to show places in Tokyo
-function moveToKanagawa() {
-
-  mapLat = centerLocations.kanagawa.lat;
-  mapLng = centerLocations.kanagawa.lng;
-  mapZoom = centerLocations.kanagawa.zoom;
-
-  moveCity();
-
-};
-
-
-// Ignore this for now. Planning to move into Knockout later
-// function to change map and list to show places in Kanagawa
-function moveToTokyo() {
-
-  mapLat = centerLocations.tokyo.lat;
-  mapLng = centerLocations.tokyo.lng;
-  mapZoom = centerLocations.tokyo.zoom;
-
-  moveCity();
-
-};
-
 
 
 // ViewModel of Knockout where this app gets data from forsquare and create new hotPlaces objects to show in html
@@ -278,18 +230,29 @@ function viewModel() {
   var self = this;
   self.Venues = ko.observableArray([]);
 
-//With this function I thought User can change area of list to download from Forsquare but not working
+//This function tells Foursqare and Map API to switch city
   self.clickToMoveKanagawa = function(e) {
     mapLat = centerLocations.kanagawa.lat;
     mapLng = centerLocations.kanagawa.lng;
+	mapZoom = centerLocations.kanagawa.zoom;
     getData();
+	moveCity();
   }
-
-  //Tell what city to search from Forsqare API. This seems like can't edit it later
+  
+  self.clickToMoveTokyo = function(e) {
+    mapLat = centerLocations.tokyo.lat;
+    mapLng = centerLocations.tokyo.lng;
+	mapZoom = centerLocations.tokyo.zoom;
+    getData();
+	moveCity();
+  }
+  
+//Function to fetch data from Foursqare API
+function getData() {
   self.latToSearch = ko.observable(mapLat);
   self.lngToSearch = ko.observable(mapLng);
-  function getData() {
-    var forsquareURL = "https://api.foursquare.com/v2/venues/trending?ll=" + self.latToSearch() + "," + self.lngToSearch() + "&limit=20&radius=5000&oauth_token=Y0RX04KYHWR0MDKUDTHAUSSQKUXZU0DEJHRW5XTRSX5KKCTM&v=20161002";
+  
+    var forsquareURL = "https://api.foursquare.com/v2/venues/trending?ll=" + self.latToSearch() + "," + self.lngToSearch() + "&limit=20&radius=50000&oauth_token=Y0RX04KYHWR0MDKUDTHAUSSQKUXZU0DEJHRW5XTRSX5KKCTM&v=20161002";
 
  //get JSON data from forsqare and change it into array
     $.getJSON( 
@@ -316,16 +279,25 @@ ko.applyBindings(new viewModel());
 
 
 
+// Views
+function initMap() {
+
+  // Constructor creates a new map - only center and zoom are required.
+
+  map = new google.maps.Map(document.getElementById('map'), {
+
+    center: {lat: mapLat, lng: mapLng},
+
+    zoom: mapZoom,
+
+    styles: mapStyles,
+
+    mapTypeControl: false
+
+  });
 
 
-
-
-
-
-
-
-
-
+}
 
 
 
